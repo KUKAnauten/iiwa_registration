@@ -7,5 +7,7 @@
     <rosparam ns="iiwa" param="toolbarSpecifications" >
         ['spec','pose','get']
     </rosparam>
+
     <node ns="iiwa" name="toolbar_mapper" pkg="iiwa_ros" type="toolbar_event_publisher" />
+  
 </launch>
