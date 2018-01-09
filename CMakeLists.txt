@@ -11,6 +11,14 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   iiwa_msgs
+  iimoveit
+  control_msgs
+  iiwa_description
+  iiwa_moveit
+  moveit_msgs
+  moveit_ros_planning_interface
+  moveit_visual_tools
+  rosmsg
   )
 
 
@@ -23,3 +31,7 @@ add_executable(button_listener src/button_listener.cpp)
 target_link_libraries(button_listener ${catkin_LIBRARIES})
 add_dependencies(button_listener ${catkin_EXPORTED_TARGETS})
 
+add_executable(move_to_target src/move_to_target.cpp)
+target_link_libraries(move_to_target ${catkin_LIBRARIES})
+
+add_dependencies(move_to_target ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
