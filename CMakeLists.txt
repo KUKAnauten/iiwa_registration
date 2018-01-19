@@ -34,4 +34,10 @@ add_dependencies(button_listener ${catkin_EXPORTED_TARGETS})
 add_executable(move_to_target src/move_to_target.cpp)
 target_link_libraries(move_to_target ${catkin_LIBRARIES})
 
+add_executable(move_to_target_box src/move_to_target_box.cpp)
+target_link_libraries(move_to_target_box ${catkin_LIBRARIES})
+
+add_executable(boxtest src/boxtest.cpp)
+target_link_libraries(boxtest ${catkin_LIBRARIES})
+
 add_dependencies(move_to_target ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
