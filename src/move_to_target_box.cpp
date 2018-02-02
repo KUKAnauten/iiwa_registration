@@ -45,7 +45,7 @@
 */
 
 #include <iimoveit/robot_interface.h>
-//#include <iiwa_registration/button_listener.h>
+#include <iiwa_registration/button_listener.h>
 
 
 namespace move_to_target{
@@ -184,7 +184,7 @@ public:
 
  int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "move_group_pose_follower");
+  ros::init(argc, argv, "move_group_registration");
   ros::NodeHandle node_handle;
   ros::AsyncSpinner spinner(1);
   spinner.start();
