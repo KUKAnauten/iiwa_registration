@@ -45,7 +45,12 @@
 */
 
 #include <iimoveit/robot_interface.h>
+<<<<<<< HEAD
 #include <iiwa_registration/button_listener.h>
+=======
+#include <std_msgs/Float32.h>
+//#include <iiwa_registration/button_listener.h>
+>>>>>>> 6203140d5f15435f9f10f4a0b1559a5fa4de0725
 
 
 namespace move_to_target{
@@ -57,23 +62,26 @@ class TargMover : public iimoveit::RobotInterface {
 public:
  TargMover(ros::NodeHandle* node_handle, const std::string& planning_group, const std::string& base_frame)
       : RobotInterface(node_handle, planning_group, base_frame) {
-    base_pose_.position.x = 0.5;
-    base_pose_.position.y = 0.0;
-    base_pose_.position.z = 0.6;
-    base_pose_.orientation.x = 0.0;
-    base_pose_.orientation.y = 1.0;
-    base_pose_.orientation.z = 0.0;
-    base_pose_.orientation.w = 0.0;
+    base_pose_.position.x = 0.530517;
+    base_pose_.position.y = -0.181726;
+    base_pose_.position.z = 1.16903;
+    base_pose_.orientation.x = 0.00964753;
+    base_pose_.orientation.y = 0.611417;
+    base_pose_.orientation.z = -0.01133;
+    base_pose_.orientation.w = 0.791169;
 
-    //Position and Orientation of the Injectionaxis (seen as a new x-axis off the Entrypoint coordinatesystem) relative to the dummy Frame
+    //Position and Orientation of the Injectionaxis (seen as a new x-axis off the Entrypoint coordinatesystem) relative to the dummy Frame)
+    insertion_point = dummy_pose.pose.position;
+    insertion_point.x += 0.056;
+    insertion_point.y += 0.0185;
 
-    needle_chanal_.position.x = 0.01; //values need to be fixed
-    needle_chanal_.position.y = 0.01;
-    needle_chanal_.position.z = 0.0;
-    needle_chanal_.orientation.x = 0.0;
-    needle_chanal_.orientation.y = 0.0;
-    needle_chanal_.orientation.z = 0.0;
-    needle_chanal_.orientation.w = 0.0;
+    needle_preinsertion_pose.position.x = insertion_point.x - 0.2; //offset to position the 19.5cm long needle
+    needle_preinsertion_pose.position.y = insertion_point.y;
+    needle_preinsertion_pose.position.z = insertion_point.z;
+    needle_preinsertion_pose.orientation.x = box_pose.orientation.x;
+    needle_preinsertion_pose.orientation.y = box_pose.orientation.y;
+    needle_preinsertion_pose.orientation.z = box_pose.orientation.z;
+    needle_preinsertion_pose.orientation.w = box_pose.orientation.w;
 
    
   }
@@ -95,17 +103,28 @@ public:
   //Move to a point above dummy, and get the right orientation (calculations in the making)
   void moveToNeedletarget() {
 
-      needle_chanal_pose_.position.x = box_pose.position.x + 0.0;
-      needle_chanal_pose_.position.y = box_pose.position.y + 0.0;
-      needle_chanal_pose_.position.z = box_pose.position.z + 0.05; //needle_chanal_pose is rel. to dummy_pose
-      needle_chanal_pose_.orientation.x = box_pose.orientation.x;
-      needle_chanal_pose_.orientation.y = box_pose.orientation.y;
-      needle_chanal_pose_.orientation.z = box_pose.orientation.z;
-      needle_chanal_pose_.orientation.w = box_pose.orientation.w;
-
-     planAndMove(needle_chanal_pose_, std::string("registered pose"));
+     planAndMove(needle_preinsertion_pose, std::string("registered pose"));
      visual_tools_.publishText(text_pose_, "Arrived at registered pose", rvt::WHITE, rvt::XLARGE);
-   }
+  }
+
+  void insertNeedle() {
+    geometry_msgs::Pose target_pose = base_pose_;
+    target_pose.position.x += 0.01; //tiefe Kugel 1: 0.005m + offset der nadel 0.005m
+     planAndMove(target_pose, std::string("moved to target"));
+     visual_tools_.publishText(text_pose_, "Arrived at target pose", rvt::WHITE, rvt::XLARGE);
+  }
+
+  void registerSubscriber() {
+    us_subscriber_ = node_handle_->subscribe("/ultrasound", 1, &TargMover::usCallback, this);
+  }
+
+  //To move along the x-insertion axis
+  void publishXGoal(double addition, double duration) { //work in progress
+    geometry_msgs::Pose target_pose = base_pose_;
+    target_pose.position.y += addition;
+    publishPoseGoal(target_pose, duration);
+  }
+
 
   // Only if no boxes are used in MoveIt
   // void moveToRegisteredPose() {
@@ -119,16 +138,16 @@ public:
 
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
     moveit_msgs::CollisionObject collision_object;
-    collision_object.header.frame_id = "/iiwa_link_0";
+    collision_object.header.frame_id = "world";
     collision_object.id = "tissue_dummy";
 
   //Silicondummy
     shape_msgs::SolidPrimitive primitive;
     primitive.type = primitive.BOX;
     primitive.dimensions.resize(3);
-    primitive.dimensions[0] = 0.102;
-    primitive.dimensions[1] = 0.05;
-    primitive.dimensions[2] = 0.05;
+    primitive.dimensions[0] = 0.07;
+    primitive.dimensions[1] = 0.07;
+    primitive.dimensions[2] = 0.0645;
 
     box_pose.position.x = dummy_pose.pose.position.x;
     box_pose.position.y = dummy_pose.pose.position.y;
@@ -169,18 +188,19 @@ public:
 
   private:
     //geometry_msgs::Pose registered_pose_ = dummy_pose.pose;
+    ros::Subscriber us_subscriber_;
     geometry_msgs::PoseStamped dummy_pose; //pose of the dummy
     geometry_msgs::Pose base_pose_;
-    geometry_msgs::Pose needle_chanal_;
+    geometry_msgs::Pose needle_preinsertion_pose;
     geometry_msgs::Pose box_pose;
+    geometry_msgs::Point insertion_point;
 
-  public: 
-    // Roboter muss noch entlang des z-Nadelkanal vectors vom einstichpunkt weg bewegt werden
-    geometry_msgs::Pose needle_chanal_pose_; 
-  
-  };
+    void usCallback(const std_msgs::Float32::ConstPtr& msg) { //work in progress
+    publishXGoal(0.1 * msg->data, 0.01);
+  }
+};
 
- } //namespace move_to_target
+} //namespace move_to_target
 
  int main(int argc, char **argv)
 {
@@ -209,13 +229,19 @@ public:
   
   registered.waitForApproval();
 
+  ROS_INFO("Click 'Next' to move to the registered pose");
+
   registered.moveToNeedletarget();
+
+  ROS_INFO("Click 'Next' to insert needle");
+
+  registered.waitForApproval();
+
+  registered.insertNeedle();
 
   ROS_INFO("Click 'Next' to end");
 
   registered.waitForApproval();
-
-  // registered.moveToRegisteredPose();
 
   ros::shutdown();
   return 0;
