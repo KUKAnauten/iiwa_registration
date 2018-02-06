@@ -43,8 +43,11 @@ target_link_libraries(boxtest ${catkin_LIBRARIES})
 add_executable(tf_broadcaster src/tf_broadcaster.cpp)
 target_link_libraries(tf_broadcaster ${catkin_LIBRARIES})
 
-add_executable(tf_static_broadcaster src/tf_static_broadcaster.cpp)
-target_link_libraries(tf_static_broadcaster ${catkin_LIBRARIES})
+add_executable(needle_insertion src/needle_insertion.cpp)
+target_link_libraries(needle_insertion ${catkin_LIBRARIES})
+
+#add_executable(tf_static_broadcaster src/tf_static_broadcaster.cpp)
+#target_link_libraries(tf_static_broadcaster ${catkin_LIBRARIES})
 
 
 add_executable(tf_listener src/tf_listener.cpp)

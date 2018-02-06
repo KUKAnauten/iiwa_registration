@@ -43,7 +43,9 @@
 --> Das in Imp.Mode?!
 
 */
-
+#include <ros/ros.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <iimoveit/robot_interface.h>
 #include <iiwa_registration/button_listener.h>
 #include <std_msgs/Float32.h>
@@ -68,6 +70,8 @@ class TargMover : public iimoveit::RobotInterface {
 public:
  TargMover(ros::NodeHandle* node_handle, const std::string& planning_group, const std::string& base_frame)
       : RobotInterface(node_handle, planning_group, base_frame) {
+      
+      
     base_pose_.position.x = 0.530517;
     base_pose_.position.y = -0.181726;
     base_pose_.position.z = 1.16903;
@@ -128,14 +132,29 @@ public:
 	
 	}
 
-  void buttonEventCallback(const std_msgs::String::ConstPtr& msg) {
+   void buttonEventCallback(const std_msgs::String::ConstPtr& msg) {
     if(msg->data == "pose_get_pressed") {
       ROS_INFO("Received message: %s", msg->data.c_str());
       dummy_pose = getPose();
-      ROS_INFO("dummy_position = (%f, %f, %f), dummy_orientation (%f, %f, %f. %f)", dummy_pose.pose.position.x, dummy_pose.pose.position.y, dummy_pose.pose.position.z, dummy_pose.pose.orientation.x, dummy_pose.pose.orientation.y, dummy_pose.pose.orientation.z, dummy_pose.pose.orientation.w);
-      visual_tools_.publishText(text_pose_, "Pose registered!", rvt::WHITE, rvt::XLARGE);
-    }
-  }
+	
+	static tf2_ros::StaticTransformBroadcaster static_broadcaster;	
+	  static_transformStamped.header.stamp = ros::Time::now();
+	  static_transformStamped.header.frame_id = "world";
+	  static_transformStamped.child_frame_id = "base_pose";
+	  static_transformStamped.transform.translation.x = dummy_pose.pose.position.x;
+	  static_transformStamped.transform.translation.y = dummy_pose.pose.position.y;
+	  static_transformStamped.transform.translation.z = dummy_pose.pose.position.z;
+	  static_transformStamped.transform.rotation.x = dummy_pose.pose.orientation.x;
+	  static_transformStamped.transform.rotation.y = dummy_pose.pose.orientation.y;
+	  static_transformStamped.transform.rotation.z = dummy_pose.pose.orientation.z;
+	  static_transformStamped.transform.rotation.w = dummy_pose.pose.orientation.w;
+	  
+	  ROS_INFO("dummy_position = (%f, %f, %f), dummy_orientation (%f, %f, %f. %f)", dummy_pose.pose.position.x, dummy_pose.pose.position.y, dummy_pose.pose.position.z, dummy_pose.pose.orientation.x, dummy_pose.pose.orientation.y, dummy_pose.pose.orientation.z, dummy_pose.pose.orientation.w);
+      
+       	static_broadcaster.sendTransform(static_transformStamped);
+  	ROS_INFO("Spinning until killed publishing %s to world", "base_pose");
+      }
+}
 
   void moveToBasePose() {
     planAndMove(base_pose_, std::string("base pose"));
@@ -147,9 +166,30 @@ public:
   
   //Move to a point above dummy, and get the right orientation (calculations in the making)
   void moveToNeedletarget() {
+	geometry_msgs::Pose needleInsertionTarget;
+  	needleInsertionTarget.orientation.w = 1.0;
+  	
+	needleInsertionTarget.position.x -= 0.1;
+	
+	move_group_.setPoseReferenceFrame("base_pose");
+	move_group_.setPoseTarget(needleInsertionTarget, "tool_link_ee");
+	
+	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
-     planAndMove(needle_preinsertion_pose, std::string("registered pose"));
-     visual_tools_.publishText(text_pose_, "Arrived at registered pose", rvt::WHITE, rvt::XLARGE);
+	bool success = (move_group_.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	
+
+	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
+
+	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 as trajectory line");
+	visual_tools_.publishAxisLabeled(needleInsertionTarget, "pose1");
+	visual_tools_.publishText(text_pose_, "Pose Goal", rvt::WHITE, rvt::XLARGE);
+	visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group_);
+	visual_tools_.trigger();
+	visual_tools_.prompt("next step");
+	
+	move_group_.move();
+     
   }
 
 
@@ -274,16 +314,6 @@ public:
   	geometry_msgs::Pose target;
   	target.orientation.w = 1.0;
   	
-//Eigen::Vector3d ea = end_effector_state.rotation().eulerAngles(0,1,2);
-//	ROS_INFO("R: %f", ea(0));
-//	ROS_INFO("P: %f", ea(1));
-//	ROS_INFO("Y: %f",ea(2));
-//	ROS_INFO_STREAM("Rotation: " << ea);
-  	
-	
-//	tf::poseTFToMsg(end_effector_state, pose);
-//	pose.position.z += 0.05;
-	
 	target.position.x += 0.05;
 	
 	move_group_.setPoseReferenceFrame("base_pose");
@@ -306,7 +336,16 @@ public:
 	move_group_.move();
   	
   }
-  
+  void startTfListener(){
+   tf::TransformListener listener;
+  tf::StampedTransform transform;
+
+  listener.waitForTransform("/base_pose", "/tool_link_ee", ros::Time(0), ros::Duration(10.0));
+  listener.lookupTransform("/base_pose", "/tool_link_ee", ros::Time(0), transform);
+	
+  ROS_INFO_STREAM("frame_id:"<< transform.frame_id_);
+  ROS_INFO_STREAM("child_frame:"<< transform.child_frame_id_);
+  }
   void cartesianPath() {
   //cartesian path planner
  	std::vector<geometry_msgs::Pose> waypoints;
@@ -356,6 +395,7 @@ public:
     geometry_msgs::Pose needle_preinsertion_pose;
     geometry_msgs::Pose box_pose;
     geometry_msgs::Point insertion_point;
+    geometry_msgs::TransformStamped static_transformStamped;
  //   tf::Transform transform;
 
     void usCallback(const std_msgs::Float32::ConstPtr& msg) { //work in progress
@@ -371,25 +411,28 @@ public:
   ros::NodeHandle node_handle;
   ros::AsyncSpinner spinner(1);
   spinner.start();
-  
-  tf::TransformListener listener;
-  tf::StampedTransform transform;
 
-  ros::Rate rate(10.0);
+  ros::Rate rate(1000);
   
-  listener.waitForTransform("/base_pose", "/tool_link_ee", ros::Time(0), ros::Duration(10.0));
-  listener.lookupTransform("/base_pose", "/tool_link_ee", ros::Time(0), transform);
-	
-  ROS_INFO_STREAM("frame_id:"<< transform.frame_id_);
-  ROS_INFO_STREAM("child_frame:"<< transform.child_frame_id_);
-  ROS_INFO("frame_id:", transform.stamp_);
-		
   move_to_target::TargMover registered(&node_handle, "manipulator", "world");
 
   registered.moveToBasePose(); //go to basePose to switch mode
+ 
+  ROS_INFO("Please start impedance mode. Move the EEF to the target and register it by pressing 'get' on the SmartPad toolbar. Click 'Next' to move back to the basepose.");
   
   registered.waitForApproval();
   
+//  registered.startTfListener();
+
+  registered.moveToBasePose();
+  
+  registered.waitForApproval();
+  
+  registered.moveToNeedletarget();
+
+  ROS_INFO("now computing Path from Eigen");
+  
+  registered.pathFromEigen();
 //  registered.cartesianPath();
 
 //	
@@ -403,8 +446,6 @@ public:
 
 //  registered.waitForApproval();
 
-    ROS_INFO("now computing Path from Eigen");
-    registered.pathFromEigen();
     
     
 //  registered.spawndummy();
