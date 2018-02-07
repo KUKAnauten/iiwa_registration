@@ -7,7 +7,7 @@
 #include <moveit/transforms/transforms.h>
 #include <tf/transform_datatypes.h>
 #include <Eigen/Geometry>
-#include <moveit/trajectory_processing/iterative_time_parametrization.h>
+#include <moveit/trajectory_processing/iterative_time_parameterization.h>
 
 namespace move_to_target{
 
@@ -254,7 +254,6 @@ namespace move_to_target{
   move_group_.setPoseReferenceFrame("target_frame_1");
 
   std::vector<geometry_msgs::Pose> waypoints;
-  waypoints.push_back(start_pose.pose);
 
   geometry_msgs::Pose target_pose = start_pose.pose;
 
@@ -279,7 +278,7 @@ namespace move_to_target{
   for(int attempts = 0; attempts < 10; attempts++){
     fraction = move_group_.computeCartesianPath(waypoints,
                                                0.01,  // eef_step
-                                               0.0,   // jump_threshold
+                                               10.0,   // jump_threshold
                                                trajectory, false);
     ROS_INFO("attempts count:%d",attempts);
     if(fraction >= 1){
@@ -297,7 +296,7 @@ namespace move_to_target{
   trajectory_processing::IterativeParabolicTimeParameterization iptp;
 
   // Fourth compute computeTimeStamps
-  bool success = (bool)iptp.computeTimeStamps(rt);
+  bool success = iptp.computeTimeStamps(rt);
   ROS_INFO("Computed time stamp %s",success?"SUCCEDED":"FAILED");
 
   // Get RobotTrajectory_msg from RobotTrajectory
