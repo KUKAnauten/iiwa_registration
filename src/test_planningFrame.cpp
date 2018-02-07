@@ -7,6 +7,7 @@
 #include <moveit/transforms/transforms.h>
 #include <tf/transform_datatypes.h>
 #include <Eigen/Geometry>
+#include <moveit/trajectory_processing/iterative_time_parametrization.h>
 
 namespace move_to_target{
 
@@ -266,30 +267,43 @@ namespace move_to_target{
   target_pose.position.x += 0.2; // test
   waypoints.push_back(target_pose);  // down along xaxis
 
-  
-  //move_group_.setStartState(start_state);
 
   move_group_.setGoalOrientationTolerance(0.2);
 
   move_group_.setMaxVelocityScalingFactor(0.1);
-
-  move_group_.setPlanningTime(100);
  
   moveit_msgs::RobotTrajectory trajectory;
-
+  move_group_.setPlanningTime(10);
   
   double fraction;
   for(int attempts = 0; attempts < 10; attempts++){
     fraction = move_group_.computeCartesianPath(waypoints,
                                                0.01,  // eef_step
-                                               .0,   // jump_threshold
-                                               trajectory);
+                                               0.0,   // jump_threshold
+                                               trajectory, false);
     ROS_INFO("attempts count:%d",attempts);
     if(fraction >= 1){
       break;
     }
   }
-  
+
+  // The trajectory needs to be modified so it will include velocities as well.
+  // First to create a RobotTrajectory object
+  robot_trajectory::RobotTrajectory rt(move_group_.getCurrentState()->getRobotModel(), "manipulator");
+  // Second get a RobotTrajectory from trajectory
+  rt.setRobotTrajectoryMsg(*move_group_.getCurrentState(), trajectory);
+ 
+  // Thrid create a IterativeParabolicTimeParameterization object
+  trajectory_processing::IterativeParabolicTimeParameterization iptp;
+
+  // Fourth compute computeTimeStamps
+  bool success = (bool)iptp.computeTimeStamps(rt);
+  ROS_INFO("Computed time stamp %s",success?"SUCCEDED":"FAILED");
+
+  // Get RobotTrajectory_msg from RobotTrajectory
+  rt.getRobotTrajectoryMsg(trajectory);
+
+  // Finally plan and execute the trajectory
   moveit::planning_interface::MoveGroupInterface::Plan my_plan;
   my_plan.trajectory_= trajectory;
   ROS_INFO("Pose Reference Frame: %s",move_group_.getPoseReferenceFrame().c_str());
@@ -297,10 +311,10 @@ namespace move_to_target{
   ROS_INFO_NAMED("tutorial", "Visualizing plan (cartesian path) (%.2f%% acheived)", fraction * 100.0);
   visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group_);
   visual_tools_.trigger(); 
-
-  ros::Duration(10.0).sleep();
+  
+  sleep(5.0);
   move_group_.execute(my_plan);
-  ros::Duration(1.0).sleep();
+
   updateRobotState();
 }
   
