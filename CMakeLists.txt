@@ -46,6 +46,9 @@ target_link_libraries(tf_broadcaster ${catkin_LIBRARIES})
 add_executable(needle_insertion src/needle_insertion.cpp)
 target_link_libraries(needle_insertion ${catkin_LIBRARIES})
 
+add_executable(ros_praktikum src/ros_praktikum.cpp)
+target_link_libraries(ros_praktikum ${catkin_LIBRARIES})
+
 #add_executable(tf_static_broadcaster src/tf_static_broadcaster.cpp)
 #target_link_libraries(tf_static_broadcaster ${catkin_LIBRARIES})
 
