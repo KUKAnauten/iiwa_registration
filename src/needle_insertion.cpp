@@ -213,16 +213,17 @@ namespace move_to_target{
   needleInsertionTarget.position.y = insertion_pose_1.position.y;
   needleInsertionTarget.position.z = insertion_pose_1.position.z;
 
-  
+  move_group_.setPlanningTime(20.0);
 
  
   move_group_.setPoseReferenceFrame("target_frame_1");
   //move_group_.setEndEffectorLink("tool_link_nh");
  ROS_INFO("PLANNING STARTED");
 
+
   planAndMove(needleInsertionTarget,"needle insertion pose");
 
-ROS_INFO("PLANNING DONE");
+  ROS_INFO("PLANNING DONE");
   //move_group_.setPoseTarget(needleInsertionTarget, "tool_link_nh");
 
   
@@ -232,7 +233,7 @@ ROS_INFO("PLANNING DONE");
   // We can also print the name of the end-effector link for this group.
   ROS_INFO("End effector link after setEndEffectorLink: %s", move_group_.getEndEffectorLink().c_str());
 
-  // move_group_.setPlanningTime(20.0);
+   
   // move_group_.setGoalPositionTolerance(0.02);
   // move_group_.setGoalOrientationTolerance(0.03);
   // ROS_INFO("PLANNING STARTED");
@@ -261,7 +262,7 @@ ROS_INFO("PLANNING DONE");
   waypoints.push_back(needleInsertionTarget);
 
   move_group_.setPoseReferenceFrame("target_frame_1");
-  move_group_.setEndEffectorLink("tool_link_nh");
+  move_group_.setEndEffectorLink("tool_link_ee");
   
   double forward = needleoffset + targetdepth_1;
 

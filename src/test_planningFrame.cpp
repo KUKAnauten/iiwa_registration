@@ -3,6 +3,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <iimoveit/robot_interface.h>
 #include <std_msgs/Float32.h>
+#include <tf/transform_listener.h>
 #include <moveit/transforms/transforms.h>
 #include <tf/transform_datatypes.h>
 #include <Eigen/Geometry>
@@ -59,98 +60,99 @@ namespace move_to_target{
     	  
     	  ROS_INFO("dummy_position = (%f, %f, %f), dummy_orientation (%f, %f, %f. %f)", dummy_pose.pose.position.x, dummy_pose.pose.position.y, dummy_pose.pose.position.z, dummy_pose.pose.orientation.x, dummy_pose.pose.orientation.y, dummy_pose.pose.orientation.z, dummy_pose.pose.orientation.w);
         
-        //starting the broadcaster
       	
-    insertion_pose_1.position.x = 0.0;
-    insertion_pose_1.position.y = 0.0185;
-    insertion_pose_1.position.z = 0.024;
+      insertion_pose_1.position.x = 0.0;
+      insertion_pose_1.position.y = 0.0185;
+      insertion_pose_1.position.z = 0.024;
 
-    insertion_pose_2.position.x = 0.0;
-    insertion_pose_2.position.y = 0.05;
-    insertion_pose_2.position.z = 0.045;
+      insertion_pose_2.position.x = 0.0;
+      insertion_pose_2.position.y = 0.05;
+      insertion_pose_2.position.z = 0.045;
 
-    insertion_pose_3.position.x = 0.0;
-    insertion_pose_3.position.y = 0.04;
-    insertion_pose_3.position.z = 0.03;
+      insertion_pose_3.position.x = 0.0;
+      insertion_pose_3.position.y = 0.04;
+      insertion_pose_3.position.z = 0.03;
 
-    //manually calculated RPY angles (radians)for the three insertion axis (E1->target1, E2->target2, E3->target3)
-    double r_1= 0.0, p_1 = 0.2, y_1 = 0.0; //E1->target1 => testvalue
-    double r_2= 0, p_2 = 0, y_2 = 0; //E2->target2 => not yet set
-    double r_3= 0, p_3 = 0, y_3 = 0; //E3->target3 => not yet set
+      //manually calculated RPY angles (radians)for the three insertion axis (E1->target1, E2->target2, E3->target3)
+      double r_1= 0.0, p_1 = 0.2, y_1 = 0.0; //E1->target1 => testvalue
+      double r_2= 0, p_2 = 0, y_2 = 0; //E2->target2 => not yet set
+      double r_3= 0, p_3 = 0, y_3 = 0; //E3->target3 => not yet set
 
-    tf::Quaternion q_orig = tf::Quaternion::getIdentity();
+      tf::Quaternion q_orig = tf::Quaternion::getIdentity();
 
-    //compute quaternions for target frames 1...3
-     
-      q_rot_1 = tf::createQuaternionFromRPY(r_1, p_1, y_1);
-      q_rot_2 = tf::createQuaternionFromRPY(r_2, p_2, y_2);
-      q_rot_3 = tf::createQuaternionFromRPY(r_3, p_3, y_3);
-
-
-      q_new_1 = q_rot_1*q_orig;  // Calculate the new orientation 
-      q_new_2 = q_rot_2*q_orig;
-      q_new_3 = q_rot_3*q_orig;
-
-     // q_new_1.normalize();
-      q_new_1.normalize();
-      q_new_1.normalize();
+      //compute quaternions for target frames 1...3
+       
+        q_rot_1 = tf::createQuaternionFromRPY(r_1, p_1, y_1);
+        q_rot_2 = tf::createQuaternionFromRPY(r_2, p_2, y_2);
+        q_rot_3 = tf::createQuaternionFromRPY(r_3, p_3, y_3);
 
 
-      quaternionTFToMsg(q_new_1.normalize(), insertion_pose_1.orientation);
-      quaternionTFToMsg(q_new_2, insertion_pose_2.orientation);
-      quaternionTFToMsg(q_new_3, insertion_pose_3.orientation);
-    //first frame
-      ROS_INFO_STREAM("Quaternions 1 are: " << insertion_pose_1.orientation);
-        
-      static_transformStamped_needlePath_1.header.stamp = ros::Time::now();
-      static_transformStamped_needlePath_1.header.frame_id = "dummy_frame";
-      static_transformStamped_needlePath_1.child_frame_id = "target_frame_1";
-      static_transformStamped_needlePath_1.transform.translation.x = insertion_pose_1.position.x;
-      static_transformStamped_needlePath_1.transform.translation.y = insertion_pose_1.position.y;
-      static_transformStamped_needlePath_1.transform.translation.z = insertion_pose_1.position.z;
-      static_transformStamped_needlePath_1.transform.rotation.x = q_new_1.x();
-      static_transformStamped_needlePath_1.transform.rotation.y = q_new_1.y();
-      static_transformStamped_needlePath_1.transform.rotation.z = q_new_1.z();
-      static_transformStamped_needlePath_1.transform.rotation.w = q_new_1.w();
+        q_new_1 = q_rot_1*q_orig;  // Calculate the new orientation 
+        q_new_2 = q_rot_2*q_orig;
+        q_new_3 = q_rot_3*q_orig;
 
-     
- 
-    //second target
+       // q_new_1.normalize();
+        q_new_1.normalize();
+        q_new_1.normalize();
+
+
+        quaternionTFToMsg(q_new_1.normalize(), insertion_pose_1.orientation);
+        quaternionTFToMsg(q_new_2, insertion_pose_2.orientation);
+        quaternionTFToMsg(q_new_3, insertion_pose_3.orientation);
+      //first frame
+        ROS_INFO_STREAM("Quaternions 1 are: " << insertion_pose_1.orientation);
+          
+        static_transformStamped_needlePath_1.header.stamp = ros::Time::now();
+        static_transformStamped_needlePath_1.header.frame_id = "dummy_frame";
+        static_transformStamped_needlePath_1.child_frame_id = "target_frame_1";
+        static_transformStamped_needlePath_1.transform.translation.x = insertion_pose_1.position.x;
+        static_transformStamped_needlePath_1.transform.translation.y = insertion_pose_1.position.y;
+        static_transformStamped_needlePath_1.transform.translation.z = insertion_pose_1.position.z;
+        static_transformStamped_needlePath_1.transform.rotation.x = q_new_1.x();
+        static_transformStamped_needlePath_1.transform.rotation.y = q_new_1.y();
+        static_transformStamped_needlePath_1.transform.rotation.z = q_new_1.z();
+        static_transformStamped_needlePath_1.transform.rotation.w = q_new_1.w();
+
+       
+   
+      //second target
+      
+          
+          static_transformStamped_needlePath_2.header.stamp = ros::Time::now();
+          static_transformStamped_needlePath_2.header.frame_id = "dummy_frame";
+          static_transformStamped_needlePath_2.child_frame_id = "target_frame_2";
+          static_transformStamped_needlePath_2.transform.translation.x = insertion_pose_2.position.x;
+          static_transformStamped_needlePath_2.transform.translation.y = insertion_pose_2.position.y;
+          static_transformStamped_needlePath_2.transform.translation.z = insertion_pose_2.position.z;
+          static_transformStamped_needlePath_2.transform.rotation.x = q_new_2.x();
+          static_transformStamped_needlePath_2.transform.rotation.y = q_new_2.y();
+          static_transformStamped_needlePath_2.transform.rotation.z = q_new_2.z();
+          static_transformStamped_needlePath_2.transform.rotation.w = q_new_2.w();
+
+          
+      
+      //third target
     
-        
-        static_transformStamped_needlePath_2.header.stamp = ros::Time::now();
-        static_transformStamped_needlePath_2.header.frame_id = "dummy_frame";
-        static_transformStamped_needlePath_2.child_frame_id = "target_frame_2";
-        static_transformStamped_needlePath_2.transform.translation.x = insertion_pose_2.position.x;
-        static_transformStamped_needlePath_2.transform.translation.y = insertion_pose_2.position.y;
-        static_transformStamped_needlePath_2.transform.translation.z = insertion_pose_2.position.z;
-        static_transformStamped_needlePath_2.transform.rotation.x = q_new_2.x();
-        static_transformStamped_needlePath_2.transform.rotation.y = q_new_2.y();
-        static_transformStamped_needlePath_2.transform.rotation.z = q_new_2.z();
-        static_transformStamped_needlePath_2.transform.rotation.w = q_new_2.w();
+          
+          static_transformStamped_needlePath_3.header.stamp = ros::Time::now();
+          static_transformStamped_needlePath_3.header.frame_id = "dummy_frame";
+          static_transformStamped_needlePath_3.child_frame_id = "target_frame_3";
+          static_transformStamped_needlePath_3.transform.translation.x = insertion_pose_3.position.x;
+          static_transformStamped_needlePath_3.transform.translation.y = insertion_pose_3.position.y;
+          static_transformStamped_needlePath_3.transform.translation.z = insertion_pose_3.position.z;
+          static_transformStamped_needlePath_3.transform.rotation.x = q_new_3.x();
+          static_transformStamped_needlePath_3.transform.rotation.y = q_new_3.y();
+          static_transformStamped_needlePath_3.transform.rotation.z = q_new_3.z();
+          static_transformStamped_needlePath_3.transform.rotation.w = q_new_3.w();
 
-        
-    
-    //third target
-  
-        
-        static_transformStamped_needlePath_3.header.stamp = ros::Time::now();
-        static_transformStamped_needlePath_3.header.frame_id = "dummy_frame";
-        static_transformStamped_needlePath_3.child_frame_id = "target_frame_3";
-        static_transformStamped_needlePath_3.transform.translation.x = insertion_pose_3.position.x;
-        static_transformStamped_needlePath_3.transform.translation.y = insertion_pose_3.position.y;
-        static_transformStamped_needlePath_3.transform.translation.z = insertion_pose_3.position.z;
-        static_transformStamped_needlePath_3.transform.rotation.x = q_new_3.x();
-        static_transformStamped_needlePath_3.transform.rotation.y = q_new_3.y();
-        static_transformStamped_needlePath_3.transform.rotation.z = q_new_3.z();
-        static_transformStamped_needlePath_3.transform.rotation.w = q_new_3.w();
 
+      //starting the broadcaster
         //static_broadcaster.sendTransform(static_transformStamped_dummy,static_transformStamped_needlePath_1,static_transformStamped_needlePath_2,static_transformStamped_needlePath_3);
-        static_broadcaster.sendTransform(static_transformStamped_dummy);
-        static_broadcaster.sendTransform(static_transformStamped_needlePath_1);
-        static_broadcaster.sendTransform(static_transformStamped_needlePath_2);
-        static_broadcaster.sendTransform(static_transformStamped_needlePath_3);
-        ROS_INFO("Spinning until killed publishing %s to world", "base_pose");
+          static_broadcaster.sendTransform(static_transformStamped_dummy);
+          static_broadcaster.sendTransform(static_transformStamped_needlePath_1);
+          static_broadcaster.sendTransform(static_transformStamped_needlePath_2);
+          static_broadcaster.sendTransform(static_transformStamped_needlePath_3);
+          ROS_INFO("Spinning until killed publishing %s to world", "base_pose");
     
     }
   }
@@ -162,8 +164,8 @@ namespace move_to_target{
   
   target_pose1.header.frame_id ="target_frame_1";
   target_pose1.pose.position.x = -0.2;
-  target_pose1.pose.position.y = -0.0075;
-  target_pose1.pose.position.z = -0.0075;//offset from registration part of the tool to the point that holds the needle
+  target_pose1.pose.position.y = 0.0075;
+  target_pose1.pose.position.z = 0.0;//offset from registration part of the tool to the point that holds the needle
   target_pose1.pose.orientation.w = 1.0;
   
   ROS_INFO("Reference Frame is: %s", move_group_.getPlanningFrame().c_str());
@@ -223,59 +225,76 @@ namespace move_to_target{
   
   } 
 
-  void moveAlongXAxisCartesian(){
+  void moveAlongXAxisCartesian(){ //planing works, execution not yet
 
-
-  robot_state::RobotState start_state(*move_group_.getCurrentState());
-  
-  ros::Duration(1.0).sleep();
-  move_group_.setPoseReferenceFrame("target_frame_1");
-
+  //robot_state::RobotState start_state(*move_group_.getCurrentState());
   geometry_msgs::PoseStamped currentPose = getPose();
+
+  ROS_INFO_STREAM("start pose before transform is: " << currentPose);
+
+  
+      tf::StampedTransform transform;
+      try{
+        listener.waitForTransform("target_frame_1", "world", ros::Time(0), ros::Duration(10.0) );
+        listener.lookupTransform("target_frame_1", "world",ros::Time(0), transform);
+      }
+      catch (tf::TransformException ex){
+        ROS_ERROR("%s",ex.what());
+        ros::Duration(1.0).sleep();
+      }
+
+  
   geometry_msgs::PoseStamped start_pose;
-  start_pose.header.frame_id = "target_frame_1";
-  start_pose.pose = currentPose.pose;
+
+  listener.transformPose("target_frame_1", currentPose, start_pose);
+
+  ROS_INFO_STREAM("start pose after transform is: " << start_pose);
+
+  move_group_.setPoseReferenceFrame("target_frame_1");
 
   std::vector<geometry_msgs::Pose> waypoints;
   waypoints.push_back(start_pose.pose);
 
   geometry_msgs::Pose target_pose = start_pose.pose;
 
-  tf::Quaternion q_insert, q_insert_rot=tf::createQuaternionFromRPY(0, 0, 0);
-  q_insert = q_insert_rot*q_new_1;
+  tf::Quaternion q_insert =  tf::Quaternion::getIdentity();
+
   quaternionTFToMsg(q_insert.normalize(), target_pose.orientation);
 
-  ROS_INFO_STREAM("normalized quaternion: " << target_pose.orientation);
-  target_pose.position.x += 0.3; // test
+  ROS_INFO_STREAM("target pose is: " << target_pose);
+ 
+  target_pose.position.x += 0.2; // test
   waypoints.push_back(target_pose);  // down along xaxis
 
-  move_group_.setStartState(start_state);
+  
+  //move_group_.setStartState(start_state);
 
   move_group_.setGoalOrientationTolerance(0.2);
 
   move_group_.setMaxVelocityScalingFactor(0.1);
+
   move_group_.setPlanningTime(100);
  
   moveit_msgs::RobotTrajectory trajectory;
 
-
+  
   double fraction;
-  //for(int attempts = 0; attempts < 100; attempts++){
+  for(int attempts = 0; attempts < 10; attempts++){
     fraction = move_group_.computeCartesianPath(waypoints,
                                                0.01,  // eef_step
-                                               0.0,   // jump_threshold
+                                               .0,   // jump_threshold
                                                trajectory);
-   // ROS_INFO("attempts count:%d",attempts);
-   // if(fraction >= 1){
-   //   break;
-   // }
-
+    ROS_INFO("attempts count:%d",attempts);
+    if(fraction >= 1){
+      break;
+    }
+  }
   
   moveit::planning_interface::MoveGroupInterface::Plan my_plan;
   my_plan.trajectory_= trajectory;
   ROS_INFO("Pose Reference Frame: %s",move_group_.getPoseReferenceFrame().c_str());
   ROS_INFO("Reference Frame: %s",move_group_.getPlanningFrame().c_str());
-  ROS_INFO_NAMED("tutorial", "Visualizing plan 4 (cartesian path) (%.2f%% acheived)", fraction * 100.0);
+  ROS_INFO_NAMED("tutorial", "Visualizing plan (cartesian path) (%.2f%% acheived)", fraction * 100.0);
   visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group_);
   visual_tools_.trigger(); 
 
@@ -336,6 +355,7 @@ namespace move_to_target{
       geometry_msgs::TransformStamped static_transformStamped_needlePath_3;
       tf::Quaternion q_rot_1, q_rot_2, q_rot_3, q_new_1, q_new_2, q_new_3;
       tf::Quaternion q_new_tar1;
+      tf::TransformListener listener;
       geometry_msgs::PoseStamped target_pose1;
   };
 
