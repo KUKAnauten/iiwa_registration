@@ -217,9 +217,11 @@ namespace move_to_target{
 
  
   move_group_.setPoseReferenceFrame("target_frame_1");
-  move_group_.setEndEffectorLink("tool_link_nh");
+  //move_group_.setEndEffectorLink("tool_link_nh");
  ROS_INFO("PLANNING STARTED");
+
   planAndMove(needleInsertionTarget,"needle insertion pose");
+
 ROS_INFO("PLANNING DONE");
   //move_group_.setPoseTarget(needleInsertionTarget, "tool_link_nh");
 

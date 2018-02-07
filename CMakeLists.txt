@@ -53,7 +53,7 @@ target_link_libraries(needle_insertion ${catkin_LIBRARIES})
 add_executable(tf_listener src/tf_listener.cpp)
 target_link_libraries(tf_listener ${catkin_LIBRARIES})
 
-#add_executable(test_planningFrame src/test_planningFrame.cpp)
-#target_link_libraries(test_planningFrame ${catkin_LIBRARIES})
+add_executable(test_planningFrame src/test_planningFrame.cpp)
+target_link_libraries(test_planningFrame ${catkin_LIBRARIES})
 
 add_dependencies(move_to_target ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
