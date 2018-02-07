@@ -310,11 +310,14 @@ namespace move_to_target{
   ROS_INFO_NAMED("tutorial", "Visualizing plan (cartesian path) (%.2f%% acheived)", fraction * 100.0);
   visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group_);
   visual_tools_.trigger(); 
-  
-  sleep(5.0);
-  move_group_.execute(my_plan);
 
-  updateRobotState();
+    if(success){
+      visual_tools_.prompt("Continue with moving?");
+      visual_tools_.publishText(text_pose_, "Moving to pose", rvt::WHITE, rvt::XLARGE);
+      visual_tools_.trigger();
+      move_group_.execute(my_plan);
+      updateRobotState();
+    }
 }
   
 
