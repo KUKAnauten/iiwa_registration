@@ -41,11 +41,3 @@ limits:
   max_control_force: {x: 0.0, y: 0.0, z: 0.0, a: 0.0, b: 0.0, c: 0.0}
   max_control_force_stop: false
   max_cartesian_velocity: {x: 0.0, y: 0.0, z: 0.0, a: 0.0, b: 0.0, c: 0.0}" 
-
-
-**TODO**
-  - feed registered jointpositions to moveIt! 
-       -> Goal pose --> db??
-       -> spawn dummy object?
-
-  - test accuracy of pose
