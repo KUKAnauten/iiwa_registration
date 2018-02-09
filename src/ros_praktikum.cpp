@@ -14,10 +14,12 @@ namespace move_to_target{
   namespace rvt = rviz_visual_tools;
 
 
+
   class TargMover : public iimoveit::RobotInterface {
   public:
    TargMover(ros::NodeHandle* node_handle, const std::string& planning_group, const std::string& base_frame)
         : RobotInterface(node_handle, planning_group, base_frame) {   
+          text_pose_.translation().z() = 2.3;
       
       base_pose_.header.frame_id ="world";  
       base_pose_.pose.position.x = 0.530517;
@@ -265,13 +267,13 @@ namespace move_to_target{
   ROS_INFO_NAMED("tutorial", "Visualizing plan (cartesian path) (%.2f%% acheived)", fraction * 100.0);
   visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group_);
   visual_tools_.trigger(); 
-  
-
-  sleep(5.0); //wait 5sec -> TODO: swap for waitforapproval
-
-  move_group_.execute(my_plan);
-
-  updateRobotState();
+    if(success){
+      visual_tools_.prompt("Continue with moving?");
+      visual_tools_.publishText(text_pose_, "Moving to pose", rvt::WHITE, rvt::XLARGE);
+      visual_tools_.trigger();
+      move_group_.execute(my_plan);
+      updateRobotState();
+    }
 }
   
 

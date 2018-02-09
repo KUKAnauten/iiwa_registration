@@ -18,7 +18,8 @@ namespace move_to_target{
   public:
    TargMover(ros::NodeHandle* node_handle, const std::string& planning_group, const std::string& base_frame)
         : RobotInterface(node_handle, planning_group, base_frame) {   
-      
+        text_pose_.translation().z() = 2.3;
+        
       base_pose_.header.frame_id ="world";  
       base_pose_.pose.position.x = 0.530517;
       base_pose_.pose.position.y = -0.181726;
@@ -32,6 +33,7 @@ namespace move_to_target{
 
 //_________________________________________________________________
   void moveToBasePose() {
+    move_group_.setStartStateToCurrentState();
     planAndMove(base_pose_, std::string("base pose"));
   }
 
@@ -163,6 +165,7 @@ namespace move_to_target{
   void moveToPositionRelativeTargetFrameOne(){
 
   
+  
   target_pose1.header.frame_id ="target_frame_1";
   target_pose1.pose.position.x = -0.2;
   target_pose1.pose.position.y = 0.0075;
@@ -173,6 +176,7 @@ namespace move_to_target{
 
   move_group_.setPlanningTime(100);
 
+  move_group_.setStartStateToCurrentState();
   planAndMove(target_pose1, std::string("target pose"));
   
   } 
@@ -198,6 +202,7 @@ namespace move_to_target{
 
   move_group_.setPlanningTime(100);
 
+  move_group_.setStartStateToCurrentState();
   planAndMove(target_pose1, std::string("target pose"));
   
   } 
@@ -222,6 +227,7 @@ namespace move_to_target{
 
   move_group_.setPlanningTime(100);
 
+  move_group_.setStartStateToCurrentState();
   planAndMove(target_pose1, std::string("target pose"));
   
   } 
@@ -254,11 +260,9 @@ namespace move_to_target{
   move_group_.setPoseReferenceFrame("target_frame_1");
 
   std::vector<geometry_msgs::Pose> waypoints;
-
   geometry_msgs::Pose target_pose = start_pose.pose;
 
   tf::Quaternion q_insert =  tf::Quaternion::getIdentity();
-
   quaternionTFToMsg(q_insert.normalize(), target_pose.orientation);
 
   ROS_INFO_STREAM("target pose is: " << target_pose);
@@ -273,7 +277,7 @@ namespace move_to_target{
  
   moveit_msgs::RobotTrajectory trajectory;
   move_group_.setPlanningTime(10);
-  
+
   double fraction;
   for(int attempts = 0; attempts < 10; attempts++){
     fraction = move_group_.computeCartesianPath(waypoints,
@@ -304,6 +308,7 @@ namespace move_to_target{
   rt.getRobotTrajectoryMsg(trajectory);
 
   // Finally plan and execute the trajectory
+  move_group_.setStartStateToCurrentState(); //?
   moveit::planning_interface::MoveGroupInterface::Plan my_plan;
   my_plan.trajectory_= trajectory;
   ROS_INFO("Pose Reference Frame: %s",move_group_.getPoseReferenceFrame().c_str());
@@ -311,19 +316,52 @@ namespace move_to_target{
   ROS_INFO_NAMED("tutorial", "Visualizing plan (cartesian path) (%.2f%% acheived)", fraction * 100.0);
   visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group_);
   visual_tools_.trigger(); 
+<<<<<<< HEAD
   
 
   sleep(5.0); //wait 5sec -> TODO: swap for waitforapproval
 
   move_group_.execute(my_plan);
+=======
+>>>>>>> 67c02d9e6b2196884d0c90f117ba8b58a1712926
 
-  updateRobotState();
+    if(success){
+      visual_tools_.prompt("Continue with moving?");
+      visual_tools_.publishText(text_pose_, "Moving to pose", rvt::WHITE, rvt::XLARGE);
+      visual_tools_.trigger();
+      move_group_.execute(my_plan);
+      updateRobotState();
+    }
 }
   
 
 
 
+<<<<<<< HEAD
   
+=======
+  void moveToBaseWithPathConstraints(){
+
+  moveit_msgs::OrientationConstraint ocm;
+  ocm.link_name = "tool_link_ee";
+  ocm.header.frame_id = "world";
+
+  ocm.absolute_x_axis_tolerance = 1.0;
+  ocm.absolute_y_axis_tolerance = 1.0;
+  ocm.absolute_z_axis_tolerance = 1.0;
+  ocm.weight = 1.0;
+
+  moveit_msgs::Constraints test_constraints;
+  test_constraints.orientation_constraints.push_back(ocm);
+  move_group_.setPathConstraints(test_constraints);
+
+  moveToBasePose();
+
+  move_group_.clearPathConstraints();
+  
+
+}
+>>>>>>> 67c02d9e6b2196884d0c90f117ba8b58a1712926
      private:
       //geometry_msgs::Pose registered_pose_ = dummy_pose.pose;
       ros::Subscriber us_subscriber_;
@@ -358,7 +396,7 @@ int main(int argc, char **argv)
   move_to_target::TargMover registered(&node_handle, "manipulator", "world");
 
   ROS_INFO("Moving to base_pose_");
-  registered.moveToBasePose();
+  registered.moveToBaseWithPathConstraints();
 
    ROS_INFO("Waiting for approval");
   registered.waitForApproval();
