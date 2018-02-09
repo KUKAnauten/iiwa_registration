@@ -226,7 +226,7 @@ namespace move_to_target{
   
   } 
 
-  void moveAlongXAxisCartesian(){ //planing works, execution not yet
+  void moveAlongXAxisCartesian(){ //status: working!!
 
   //robot_state::RobotState start_state(*move_group_.getCurrentState());
   geometry_msgs::PoseStamped currentPose = getPose();
@@ -278,7 +278,7 @@ namespace move_to_target{
   for(int attempts = 0; attempts < 10; attempts++){
     fraction = move_group_.computeCartesianPath(waypoints,
                                                0.01,  // eef_step
-                                               10.0,   // jump_threshold
+                                               10.0,   // jump_threshold 10 -> TODO: see if less works
                                                trajectory, false);
     ROS_INFO("attempts count:%d",attempts);
     if(fraction >= 1){
@@ -286,9 +286,10 @@ namespace move_to_target{
     }
   }
 
-  // The trajectory needs to be modified so it will include velocities as well.
+  // The trajectory needs to be modified so it will include velocities as well. This is done here.
   // First to create a RobotTrajectory object
   robot_trajectory::RobotTrajectory rt(move_group_.getCurrentState()->getRobotModel(), "manipulator");
+ 
   // Second get a RobotTrajectory from trajectory
   rt.setRobotTrajectoryMsg(*move_group_.getCurrentState(), trajectory);
  
@@ -311,7 +312,9 @@ namespace move_to_target{
   visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group_);
   visual_tools_.trigger(); 
   
-  sleep(5.0);
+
+  sleep(5.0); //wait 5sec -> TODO: swap for waitforapproval
+
   move_group_.execute(my_plan);
 
   updateRobotState();
@@ -320,39 +323,7 @@ namespace move_to_target{
 
 
 
-  void moveAlongXAxisPathConstraints(){
-
-  moveit_msgs::OrientationConstraint ocm;
-  ocm.link_name = "tool_link_ee";
-  ocm.header.frame_id = "target_frame_1";
-  ocm.orientation.w = 1.0;
-  ocm.absolute_x_axis_tolerance = 0.3;
-  ocm.absolute_y_axis_tolerance = 0.1;
-  ocm.absolute_z_axis_tolerance = 0.1;
-  ocm.weight = 1.0;
-
-  moveit_msgs::Constraints test_constraints;
-  test_constraints.orientation_constraints.push_back(ocm);
-  move_group_.setPathConstraints(test_constraints);
-
   
-  geometry_msgs::PoseStamped target_pose2;
-  target_pose2.header.frame_id ="target_frame_1";
-  target_pose2.pose.position.x = -0.2;
-  target_pose2.pose.position.y = 0.0;
-  target_pose2.pose.position.z = 0.0;//offset from registration part of the tool to the point that holds the needle
-  target_pose2.pose.orientation.w = 1.0;
-  
-  ROS_INFO("Reference Frame is: %s", move_group_.getPlanningFrame().c_str());
-
-  move_group_.setPlanningTime(100);
-
-  planAndMove(target_pose2, std::string("target pose2"));
-
-  move_group_.clearPathConstraints();
-  
-
-}
      private:
       //geometry_msgs::Pose registered_pose_ = dummy_pose.pose;
       ros::Subscriber us_subscriber_;
