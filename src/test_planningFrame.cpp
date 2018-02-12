@@ -10,7 +10,7 @@
 #include <Eigen/Geometry>
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <iiwa_ros.h>
-#include <iiwa_msgs/DOF.h>
+#include <iiwa_msgs/CartesianQuantity.h>
 
 
 namespace move_to_target{
@@ -25,13 +25,13 @@ namespace move_to_target{
         text_pose_.translation().z() = 2.3;
         
       base_pose_.header.frame_id ="world";  
-      base_pose_.pose.position.x = 0.530517;
-      base_pose_.pose.position.y = -0.181726;
-      base_pose_.pose.position.z = 1.16903;
-      base_pose_.pose.orientation.x = 0.00964753;
-      base_pose_.pose.orientation.y = 0.611417;
-      base_pose_.pose.orientation.z = -0.01133;
-      base_pose_.pose.orientation.w = 0.791169;
+      base_pose_.pose.position.x = 0.536;
+      base_pose_.pose.position.y = -0.011;
+      base_pose_.pose.position.z = 1.175;
+      base_pose_.pose.orientation.x = 0.806;
+      base_pose_.pose.orientation.y = 0.025;
+      base_pose_.pose.orientation.z = -0.590;
+      base_pose_.pose.orientation.w = 0.036;
      
   }
 
@@ -71,8 +71,8 @@ namespace move_to_target{
       	This means, the targets set the origin of the new frames target_frame_xyz(0,0,0)*/	
       
       insertion_pose_1.position.x = 0.005;
-      insertion_pose_1.position.y = 0.0185;
-      insertion_pose_1.position.z = 0.024;
+      insertion_pose_1.position.y = 0.0185+0.075;
+      insertion_pose_1.position.z = 0.024+0.075;
 
       insertion_pose_2.position.x = 0.015;
       insertion_pose_2.position.y = 0.05;
@@ -101,12 +101,12 @@ namespace move_to_target{
         q_new_2 = q_rot_2*q_orig;
         q_new_3 = q_rot_3*q_orig;
 
-       // q_new_1.normalize();
         q_new_1.normalize();
-        q_new_1.normalize();
+        q_new_2.normalize();
+        q_new_3.normalize();
 
 
-         // quaternionTFToMsg(q_new_1.normalize(), insertion_pose_1.orientation);
+        quaternionTFToMsg(q_new_1.normalize(), insertion_pose_1.orientation);
          // quaternionTFToMsg(q_new_2, insertion_pose_2.orientation);
          // quaternionTFToMsg(q_new_3, insertion_pose_3.orientation);
 
@@ -169,18 +169,14 @@ namespace move_to_target{
 
   //position only: working! -> this is, what is needed, as "target_frame_1" already holds the needleorientation
   void moveToPositionRelativeTargetFrameOne(){
-
-  
   
   target_pose1.header.frame_id ="target_frame_1";
-  target_pose1.pose.position.x = -0.2;
-  target_pose1.pose.position.y = 0.0075;
-  target_pose1.pose.position.z = 0.0;//offset from registration part of the tool to the point that holds the needle
+  target_pose1.pose.position.x = -0.22;
+  target_pose1.pose.position.y = 0.025;
+  target_pose1.pose.position.z = 0.025;//offset from registration part of the tool to the point that holds the needle
   target_pose1.pose.orientation.w = 1.0;
   
-  ROS_INFO("Reference Frame is: %s", move_group_.getPlanningFrame().c_str());
-
-  move_group_.setPlanningTime(100);
+  ROS_INFO("Reference Frame is: %s", move_group_.getPoseReferenceFrame().c_str());
 
   move_group_.setStartStateToCurrentState();
   planAndMove(target_pose1, std::string("target pose"));
@@ -223,7 +219,7 @@ namespace move_to_target{
 
   geometry_msgs::PoseStamped target_pose1;
   target_pose1.header.frame_id ="target_frame_1";
-  target_pose1.pose.position.x = -0.2;
+  target_pose1.pose.position.x = -0.195;
   target_pose1.pose.position.y = 0.0;
   target_pose1.pose.position.z = 0.0;
   
@@ -238,7 +234,7 @@ namespace move_to_target{
   
   } 
 
-  void moveAlongXAxisCartesian(){ //status: working!!
+  void moveAlongXAxisCartesian(double x_value, double y_value, double z_value){ //status: working!!
 
   //robot_state::RobotState start_state(*move_group_.getCurrentState());
   geometry_msgs::PoseStamped currentPose = getPose();
@@ -271,30 +267,27 @@ namespace move_to_target{
   tf::Quaternion q_insert =  tf::Quaternion::getIdentity();
   quaternionTFToMsg(q_insert.normalize(), target_pose.orientation);
 
-  ROS_INFO_STREAM("target pose is: " << target_pose);
  
-  target_pose.position.x += 0.2; // test
-  waypoints.push_back(target_pose);  // down along xaxis
+  target_pose.position.x += x_value; 
+  target_pose.position.x += y_value;
+  target_pose.position.x += z_value;
+  waypoints.push_back(target_pose);  
+  
+  ROS_INFO_STREAM("target pose is: " << target_pose);
 
+  move_group_.setGoalOrientationTolerance(0.0);
 
-  move_group_.setGoalOrientationTolerance(0.2);
+  move_group_.setGoalPositionTolerance(0.0);
 
-  move_group_.setMaxVelocityScalingFactor(0.1);
+  move_group_.setMaxVelocityScalingFactor(0.5);
  
   moveit_msgs::RobotTrajectory trajectory;
-  move_group_.setPlanningTime(10);
+  move_group_.setPlanningTime(50);
 
-  double fraction;
-  for(int attempts = 0; attempts < 10; attempts++){
-    fraction = move_group_.computeCartesianPath(waypoints,
+  double fraction = move_group_.computeCartesianPath(waypoints,
                                                0.01,  // eef_step
-                                               0.0,   // jump_threshold 10 -> TODO: see if less works
+                                               0.0,   
                                                trajectory, false);
-    ROS_INFO("attempts count:%d",attempts);
-    if(fraction >= 1){
-      break;
-    }
-  }
 
   // The trajectory needs to be modified so it will include velocities as well. This is done here.
   // First to create a RobotTrajectory object
@@ -362,6 +355,37 @@ int main(int argc, char **argv)
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
+  //values for CartesianImpedanceMode servicecall
+  iiwa_msgs::CartesianQuantity stiffness_reg;
+  stiffness_reg.x = 20.0;
+  stiffness_reg.y = 20.0;
+  stiffness_reg.z = 20.0;
+  stiffness_reg.a = 20.0;
+  stiffness_reg.b = 20.0;
+  stiffness_reg.c = 20.0;
+  iiwa_msgs::CartesianQuantity damping_reg;
+  damping_reg.x = 0.8;
+  damping_reg.y = 0.8;
+  damping_reg.z = 0.8;
+  damping_reg.a = 0.8;
+  damping_reg.b = 0.8;
+  damping_reg.c = 0.8;
+
+  iiwa_msgs::CartesianQuantity stiffness_inj;
+  stiffness_inj.x = 40.0;
+  stiffness_inj.y = 100.0;
+  stiffness_inj.z = 100.0;
+  stiffness_inj.a = 100.0;
+  stiffness_inj.b = 100.0;
+  stiffness_inj.c = 100.0;
+  iiwa_msgs::CartesianQuantity damping_inj;
+  damping_inj.x = 0.9;
+  damping_inj.y = 0.9;
+  damping_inj.z = 0.9;
+  damping_inj.a = 0.9;
+  damping_inj.b = 0.9;
+  damping_inj.c = 0.9;
+
   ros::Rate rate(10);
   
   // create a move_to_target object
@@ -372,38 +396,41 @@ int main(int argc, char **argv)
 
   iiwa_ros_object.init();
 
+
   ROS_INFO("Moving to base_pose_ ");
   registered.moveToBasePose();
 
-  ROS_INFO("change to force mode?");
+  ROS_INFO("Click 'next' to cange to CartesianImpedanceMode");
   registered.waitForApproval();
 
-  iiwa_ros_object.getSmartServoService().setDesiredForceMode(iiwa_msgs::DOF::X, 1.0, 100);
+  iiwa_ros_object.getSmartServoService().setCartesianImpedanceMode(stiffness_reg, damping_reg, 0.0, 0.7);
+  ROS_INFO("Changed Mode");
   	
-  ROS_INFO("Waiting for approval");
+  ROS_INFO("Click 'next to change back to PositionControlMode '");
   registered.waitForApproval();
-  	
-  ROS_INFO("Waiting for approval");
-  registered.waitForApproval();
-  	
-  ROS_INFO("Waiting for approval");
+
+  iiwa_ros_object.getSmartServoService().setPositionControlMode();
+
+  ROS_INFO("Move above targetframe?");
   registered.waitForApproval();
 
   ROS_INFO("Moving to new pose above targetframe");
-  registered.moveToPositionRelativeTargetFrameOne();
+  registered.moveToPositionRelativeTargetFrameOne(); 
 
   ROS_INFO("Waiting for approval");
   registered.waitForApproval();
   
-  ROS_INFO("start planing for needleinsertion");
-  registered.moveAlongXAxisCartesian();
+  ROS_INFO("start planning for needleinsertion");
+  registered.moveAlongXAxisCartesian(0.06, 0.0, 0.0);
   
   ROS_INFO("finished planning");  
   
   registered.waitForApproval();
   
-  registered.moveToBasePose();
+  registered.moveAlongXAxisCartesian(-0.1, 0.0, 0.0);
    
+  iiwa_ros_object.getSmartServoService().setPositionControlMode();
+
   ros::shutdown();
   return 0;
 }

@@ -16,4 +16,6 @@
     </node>
   </group>
 
+  <include file="$(find iiwa_registration)/launch/bag.launch"/>
+
 </launch>

@@ -25,10 +25,10 @@ namespace move_to_target{
       base_pose_.pose.position.x = 0.530517;
       base_pose_.pose.position.y = -0.181726;
       base_pose_.pose.position.z = 1.16903;
-      base_pose_.pose.orientation.x = 0.00964753;
-      base_pose_.pose.orientation.y = 0.611417;
-      base_pose_.pose.orientation.z = -0.01133;
-      base_pose_.pose.orientation.w = 0.791169;
+      base_pose_.pose.orientation.x = 0.728607594967;
+      base_pose_.pose.orientation.y = -0.684924482468;
+      base_pose_.pose.orientation.z = 0.00145691458986;
+      base_pose_.pose.orientation.w = 0.00269978358987;
      
   }
 
