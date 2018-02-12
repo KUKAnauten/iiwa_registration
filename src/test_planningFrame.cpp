@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/Vector3.h>
 #include <iimoveit/robot_interface.h>
 #include <std_msgs/Float32.h>
 #include <tf/transform_listener.h>
@@ -8,6 +9,9 @@
 #include <tf/transform_datatypes.h>
 #include <Eigen/Geometry>
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
+#include <iiwa_ros.h>
+#include <iiwa_msgs/DOF.h>
+
 
 namespace move_to_target{
 
@@ -41,7 +45,7 @@ namespace move_to_target{
   //waits for the SmartPad button to get pressed
   //and broadcasts the new transform from dummy_frame -> world
   //Tipp: have a look at the tf_tree before and after pressing the button.
-  //In a Terminalwindow type:
+  //In a new terminalwindow type:
   //  $ rosrun rqt_tf_tree rqt_tf_tree
   void buttonEventCallback(const std_msgs::String::ConstPtr& msg) {
     if(msg->data == "pose_get_pressed") {
@@ -63,20 +67,23 @@ namespace move_to_target{
     	  
     	  ROS_INFO("dummy_position = (%f, %f, %f), dummy_orientation (%f, %f, %f. %f)", dummy_pose.pose.position.x, dummy_pose.pose.position.y, dummy_pose.pose.position.z, dummy_pose.pose.orientation.x, dummy_pose.pose.orientation.y, dummy_pose.pose.orientation.z, dummy_pose.pose.orientation.w);
         
-      	
-      insertion_pose_1.position.x = 0.0;
+      /*The new tf frames Position is defined by the targets positions relative to the dummy coordinatesystem.
+      	This means, the targets set the origin of the new frames target_frame_xyz(0,0,0)*/	
+      
+      insertion_pose_1.position.x = 0.005;
       insertion_pose_1.position.y = 0.0185;
       insertion_pose_1.position.z = 0.024;
 
-      insertion_pose_2.position.x = 0.0;
+      insertion_pose_2.position.x = 0.015;
       insertion_pose_2.position.y = 0.05;
       insertion_pose_2.position.z = 0.045;
 
-      insertion_pose_3.position.x = 0.0;
+      insertion_pose_3.position.x = 0.05;
       insertion_pose_3.position.y = 0.04;
       insertion_pose_3.position.z = 0.03;
 
-      //manually calculated RPY angles (radians)for the three insertion axis (E1->target1, E2->target2, E3->target3)
+      //manually calculated RPY angles (radians) for the three insertion axis (E1->target1, E2->target2, E3->target3)
+     
       double r_1= 0.0, p_1 = 0.2, y_1 = 0.0; //E1->target1 => testvalue
       double r_2= 0, p_2 = 0, y_2 = 0; //E2->target2 => not yet set
       double r_3= 0, p_3 = 0, y_3 = 0; //E3->target3 => not yet set
@@ -84,7 +91,7 @@ namespace move_to_target{
       tf::Quaternion q_orig = tf::Quaternion::getIdentity();
 
       //compute quaternions for target frames 1...3
-       
+      
         q_rot_1 = tf::createQuaternionFromRPY(r_1, p_1, y_1);
         q_rot_2 = tf::createQuaternionFromRPY(r_2, p_2, y_2);
         q_rot_3 = tf::createQuaternionFromRPY(r_3, p_3, y_3);
@@ -99,28 +106,29 @@ namespace move_to_target{
         q_new_1.normalize();
 
 
-        quaternionTFToMsg(q_new_1.normalize(), insertion_pose_1.orientation);
-        quaternionTFToMsg(q_new_2, insertion_pose_2.orientation);
-        quaternionTFToMsg(q_new_3, insertion_pose_3.orientation);
-      //first frame
+         // quaternionTFToMsg(q_new_1.normalize(), insertion_pose_1.orientation);
+         // quaternionTFToMsg(q_new_2, insertion_pose_2.orientation);
+         // quaternionTFToMsg(q_new_3, insertion_pose_3.orientation);
+
+     
         ROS_INFO_STREAM("Quaternions 1 are: " << insertion_pose_1.orientation);
-          
+        
+      // target_frame_1
+
         static_transformStamped_needlePath_1.header.stamp = ros::Time::now();
         static_transformStamped_needlePath_1.header.frame_id = "dummy_frame";
         static_transformStamped_needlePath_1.child_frame_id = "target_frame_1";
-        static_transformStamped_needlePath_1.transform.translation.x = insertion_pose_1.position.x;
-        static_transformStamped_needlePath_1.transform.translation.y = insertion_pose_1.position.y;
-        static_transformStamped_needlePath_1.transform.translation.z = insertion_pose_1.position.z;
-        static_transformStamped_needlePath_1.transform.rotation.x = q_new_1.x();
+        static_transformStamped_needlePath_2.transform.translation.x = insertion_pose_1.position.x;
+        static_transformStamped_needlePath_2.transform.translation.y = insertion_pose_1.position.y;
+        static_transformStamped_needlePath_2.transform.translation.z = insertion_pose_1.position.z;
+        static_transformStamped_needlePath_2.transform.rotation.x = q_new_1.x();
         static_transformStamped_needlePath_1.transform.rotation.y = q_new_1.y();
         static_transformStamped_needlePath_1.transform.rotation.z = q_new_1.z();
         static_transformStamped_needlePath_1.transform.rotation.w = q_new_1.w();
-
        
    
-      //second target
-      
-          
+      //target_frame_2
+        
           static_transformStamped_needlePath_2.header.stamp = ros::Time::now();
           static_transformStamped_needlePath_2.header.frame_id = "dummy_frame";
           static_transformStamped_needlePath_2.child_frame_id = "target_frame_2";
@@ -132,11 +140,9 @@ namespace move_to_target{
           static_transformStamped_needlePath_2.transform.rotation.z = q_new_2.z();
           static_transformStamped_needlePath_2.transform.rotation.w = q_new_2.w();
 
-          
-      
-      //third target
+              
+      //target_frame_3
     
-          
           static_transformStamped_needlePath_3.header.stamp = ros::Time::now();
           static_transformStamped_needlePath_3.header.frame_id = "dummy_frame";
           static_transformStamped_needlePath_3.child_frame_id = "target_frame_3";
@@ -155,7 +161,7 @@ namespace move_to_target{
           static_broadcaster.sendTransform(static_transformStamped_needlePath_1);
           static_broadcaster.sendTransform(static_transformStamped_needlePath_2);
           static_broadcaster.sendTransform(static_transformStamped_needlePath_3);
-          ROS_INFO("Spinning until killed publishing %s to world", "base_pose");
+          ROS_INFO("Broadcasting transforms from %s, to world and %s, %s, %s to dummy_frame", "dummy_frame","target_frame_1","target_frame_2","target_frame_3");
     
     }
   }
@@ -282,7 +288,7 @@ namespace move_to_target{
   for(int attempts = 0; attempts < 10; attempts++){
     fraction = move_group_.computeCartesianPath(waypoints,
                                                0.01,  // eef_step
-                                               10.0,   // jump_threshold 10 -> TODO: see if less works
+                                               0.0,   // jump_threshold 10 -> TODO: see if less works
                                                trajectory, false);
     ROS_INFO("attempts count:%d",attempts);
     if(fraction >= 1){
@@ -316,14 +322,6 @@ namespace move_to_target{
   ROS_INFO_NAMED("tutorial", "Visualizing plan (cartesian path) (%.2f%% acheived)", fraction * 100.0);
   visual_tools_.publishTrajectoryLine(my_plan.trajectory_, joint_model_group_);
   visual_tools_.trigger(); 
-<<<<<<< HEAD
-  
-
-  sleep(5.0); //wait 5sec -> TODO: swap for waitforapproval
-
-  move_group_.execute(my_plan);
-=======
->>>>>>> 67c02d9e6b2196884d0c90f117ba8b58a1712926
 
     if(success){
       visual_tools_.prompt("Continue with moving?");
@@ -335,33 +333,6 @@ namespace move_to_target{
 }
   
 
-
-
-<<<<<<< HEAD
-  
-=======
-  void moveToBaseWithPathConstraints(){
-
-  moveit_msgs::OrientationConstraint ocm;
-  ocm.link_name = "tool_link_ee";
-  ocm.header.frame_id = "world";
-
-  ocm.absolute_x_axis_tolerance = 1.0;
-  ocm.absolute_y_axis_tolerance = 1.0;
-  ocm.absolute_z_axis_tolerance = 1.0;
-  ocm.weight = 1.0;
-
-  moveit_msgs::Constraints test_constraints;
-  test_constraints.orientation_constraints.push_back(ocm);
-  move_group_.setPathConstraints(test_constraints);
-
-  moveToBasePose();
-
-  move_group_.clearPathConstraints();
-  
-
-}
->>>>>>> 67c02d9e6b2196884d0c90f117ba8b58a1712926
      private:
       //geometry_msgs::Pose registered_pose_ = dummy_pose.pose;
       ros::Subscriber us_subscriber_;
@@ -393,12 +364,29 @@ int main(int argc, char **argv)
 
   ros::Rate rate(10);
   
+  // create a move_to_target object
   move_to_target::TargMover registered(&node_handle, "manipulator", "world");
 
-  ROS_INFO("Moving to base_pose_");
-  registered.moveToBaseWithPathConstraints();
+  // create an iiwa_ros object for easy access to ROS topics and services of the iiwa robot
+  iiwa_ros::iiwaRos iiwa_ros_object;
 
-   ROS_INFO("Waiting for approval");
+  iiwa_ros_object.init();
+
+  ROS_INFO("Moving to base_pose_ ");
+  registered.moveToBasePose();
+
+  ROS_INFO("change to force mode?");
+  registered.waitForApproval();
+
+  iiwa_ros_object.getSmartServoService().setDesiredForceMode(iiwa_msgs::DOF::X, 1.0, 100);
+  	
+  ROS_INFO("Waiting for approval");
+  registered.waitForApproval();
+  	
+  ROS_INFO("Waiting for approval");
+  registered.waitForApproval();
+  	
+  ROS_INFO("Waiting for approval");
   registered.waitForApproval();
 
   ROS_INFO("Moving to new pose above targetframe");

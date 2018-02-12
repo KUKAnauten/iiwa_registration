@@ -234,7 +234,7 @@ namespace move_to_target{
   for(int attempts = 0; attempts < 10; attempts++){
     fraction = move_group_.computeCartesianPath(waypoints,
                                                0.01,  // eef_step
-                                               10.0,   // jump_threshold 10 -> TODO: see if less works
+                                               0.0,   // jump_threshold 10 -> TODO: see if less works
                                                trajectory, false);
     ROS_INFO("attempts count:%d",attempts);
     if(fraction >= 1){

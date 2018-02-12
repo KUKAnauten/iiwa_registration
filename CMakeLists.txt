@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   control_msgs
   iiwa_description
   iiwa_moveit
+  iiwa_ros
   moveit_msgs
   moveit_ros_planning_interface
   moveit_visual_tools
@@ -36,9 +37,6 @@ target_link_libraries(move_to_target ${catkin_LIBRARIES})
 
 add_executable(move_to_target_box src/move_to_target_box.cpp)
 target_link_libraries(move_to_target_box ${catkin_LIBRARIES})
-
-add_executable(boxtest src/boxtest.cpp)
-target_link_libraries(boxtest ${catkin_LIBRARIES})
 
 add_executable(tf_broadcaster src/tf_broadcaster.cpp)
 target_link_libraries(tf_broadcaster ${catkin_LIBRARIES})
