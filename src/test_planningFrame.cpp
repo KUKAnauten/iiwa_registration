@@ -71,20 +71,20 @@ namespace move_to_target{
       	This means, the targets set the origin of the new frames target_frame_xyz(0,0,0)*/	
       
       insertion_pose_1.position.x = 0.005;
-      insertion_pose_1.position.y = 0.0185+0.075;
-      insertion_pose_1.position.z = 0.024+0.075;
+      insertion_pose_1.position.y = 0.0185-0.0075;
+      insertion_pose_1.position.z = 0.024-0.0075;
 
-      insertion_pose_2.position.x = 0.015;
-      insertion_pose_2.position.y = 0.05;
-      insertion_pose_2.position.z = 0.045;
+      // insertion_pose_2.position.x = 0.015;
+      // insertion_pose_2.position.y = 0.05;
+      // insertion_pose_2.position.z = 0.045;
 
-      insertion_pose_3.position.x = 0.05;
-      insertion_pose_3.position.y = 0.04;
-      insertion_pose_3.position.z = 0.03;
+      // insertion_pose_3.position.x = 0.05;
+      // insertion_pose_3.position.y = 0.04;
+      // insertion_pose_3.position.z = 0.03;
 
       //manually calculated RPY angles (radians) for the three insertion axis (E1->target1, E2->target2, E3->target3)
      
-      double r_1= 0.0, p_1 = 0.2, y_1 = 0.0; //E1->target1 => testvalue
+      double r_1= 0.0, p_1 = 0.0, y_1 = 0.0; //E1->target1 => testvalue
       double r_2= 0, p_2 = 0, y_2 = 0; //E2->target2 => not yet set
       double r_3= 0, p_3 = 0, y_3 = 0; //E3->target3 => not yet set
 
@@ -129,30 +129,30 @@ namespace move_to_target{
    
       //target_frame_2
         
-          static_transformStamped_needlePath_2.header.stamp = ros::Time::now();
-          static_transformStamped_needlePath_2.header.frame_id = "dummy_frame";
-          static_transformStamped_needlePath_2.child_frame_id = "target_frame_2";
-          static_transformStamped_needlePath_2.transform.translation.x = insertion_pose_2.position.x;
-          static_transformStamped_needlePath_2.transform.translation.y = insertion_pose_2.position.y;
-          static_transformStamped_needlePath_2.transform.translation.z = insertion_pose_2.position.z;
-          static_transformStamped_needlePath_2.transform.rotation.x = q_new_2.x();
-          static_transformStamped_needlePath_2.transform.rotation.y = q_new_2.y();
-          static_transformStamped_needlePath_2.transform.rotation.z = q_new_2.z();
-          static_transformStamped_needlePath_2.transform.rotation.w = q_new_2.w();
+      //     static_transformStamped_needlePath_2.header.stamp = ros::Time::now();
+      //     static_transformStamped_needlePath_2.header.frame_id = "dummy_frame";
+      //     static_transformStamped_needlePath_2.child_frame_id = "target_frame_2";
+      //     static_transformStamped_needlePath_2.transform.translation.x = insertion_pose_2.position.x;
+      //     static_transformStamped_needlePath_2.transform.translation.y = insertion_pose_2.position.y;
+      //     static_transformStamped_needlePath_2.transform.translation.z = insertion_pose_2.position.z;
+      //     static_transformStamped_needlePath_2.transform.rotation.x = q_new_2.x();
+      //     static_transformStamped_needlePath_2.transform.rotation.y = q_new_2.y();
+      //     static_transformStamped_needlePath_2.transform.rotation.z = q_new_2.z();
+      //     static_transformStamped_needlePath_2.transform.rotation.w = q_new_2.w();
 
               
-      //target_frame_3
+      // //target_frame_3
     
-          static_transformStamped_needlePath_3.header.stamp = ros::Time::now();
-          static_transformStamped_needlePath_3.header.frame_id = "dummy_frame";
-          static_transformStamped_needlePath_3.child_frame_id = "target_frame_3";
-          static_transformStamped_needlePath_3.transform.translation.x = insertion_pose_3.position.x;
-          static_transformStamped_needlePath_3.transform.translation.y = insertion_pose_3.position.y;
-          static_transformStamped_needlePath_3.transform.translation.z = insertion_pose_3.position.z;
-          static_transformStamped_needlePath_3.transform.rotation.x = q_new_3.x();
-          static_transformStamped_needlePath_3.transform.rotation.y = q_new_3.y();
-          static_transformStamped_needlePath_3.transform.rotation.z = q_new_3.z();
-          static_transformStamped_needlePath_3.transform.rotation.w = q_new_3.w();
+      //     static_transformStamped_needlePath_3.header.stamp = ros::Time::now();
+      //     static_transformStamped_needlePath_3.header.frame_id = "dummy_frame";
+      //     static_transformStamped_needlePath_3.child_frame_id = "target_frame_3";
+      //     static_transformStamped_needlePath_3.transform.translation.x = insertion_pose_3.position.x;
+      //     static_transformStamped_needlePath_3.transform.translation.y = insertion_pose_3.position.y;
+      //     static_transformStamped_needlePath_3.transform.translation.z = insertion_pose_3.position.z;
+      //     static_transformStamped_needlePath_3.transform.rotation.x = q_new_3.x();
+      //     static_transformStamped_needlePath_3.transform.rotation.y = q_new_3.y();
+      //     static_transformStamped_needlePath_3.transform.rotation.z = q_new_3.z();
+      //     static_transformStamped_needlePath_3.transform.rotation.w = q_new_3.w();
 
 
       //starting the broadcaster
@@ -170,10 +170,11 @@ namespace move_to_target{
   //position only: working! -> this is, what is needed, as "target_frame_1" already holds the needleorientation
   void moveToPositionRelativeTargetFrameOne(){
   
+  //moving to point directly above target
   target_pose1.header.frame_id ="target_frame_1";
-  target_pose1.pose.position.x = -0.22;
-  target_pose1.pose.position.y = 0.025;
-  target_pose1.pose.position.z = 0.025;//offset from registration part of the tool to the point that holds the needle
+  target_pose1.pose.position.x = -0.21;
+  target_pose1.pose.position.y = 0.0;
+  target_pose1.pose.position.z = 0.0;
   target_pose1.pose.orientation.w = 1.0;
   
   ROS_INFO("Reference Frame is: %s", move_group_.getPoseReferenceFrame().c_str());
@@ -360,9 +361,9 @@ int main(int argc, char **argv)
   stiffness_reg.x = 20.0;
   stiffness_reg.y = 20.0;
   stiffness_reg.z = 20.0;
-  stiffness_reg.a = 20.0;
-  stiffness_reg.b = 20.0;
-  stiffness_reg.c = 20.0;
+  stiffness_reg.a = 10.0;
+  stiffness_reg.b = 10.0;
+  stiffness_reg.c = 10.0;
   iiwa_msgs::CartesianQuantity damping_reg;
   damping_reg.x = 0.8;
   damping_reg.y = 0.8;
@@ -388,6 +389,7 @@ int main(int argc, char **argv)
 
   ros::Rate rate(10);
   
+  int i = 0;
   // create a move_to_target object
   move_to_target::TargMover registered(&node_handle, "manipulator", "world");
 
@@ -417,19 +419,21 @@ int main(int argc, char **argv)
   ROS_INFO("Moving to new pose above targetframe");
   registered.moveToPositionRelativeTargetFrameOne(); 
 
-  ROS_INFO("Waiting for approval");
-  registered.waitForApproval();
   
-  ROS_INFO("start planning for needleinsertion");
-  registered.moveAlongXAxisCartesian(0.06, 0.0, 0.0);
-  
-  ROS_INFO("finished planning");  
-  
-  registered.waitForApproval();
-  
-  registered.moveAlongXAxisCartesian(-0.1, 0.0, 0.0);
-   
-  iiwa_ros_object.getSmartServoService().setPositionControlMode();
+  for(i=1; i < 100; i++){
+
+    ROS_INFO("Weiter mit Nadeleinstichschleife?");
+    registered.waitForApproval();
+
+    ROS_INFO("nadel zum %i mal einführen", i);
+    registered.moveAlongXAxisCartesian(0.015, 0.0, 0.0);
+    
+    ROS_INFO("next' um nadel zum %i mal entnehmen", i);  
+    
+    registered.waitForApproval();
+    
+    registered.moveAlongXAxisCartesian(-0.015, 0.0, 0.0);
+   }
 
   ros::shutdown();
   return 0;
