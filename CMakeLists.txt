@@ -47,8 +47,8 @@ target_link_libraries(needle_insertion ${catkin_LIBRARIES})
 add_executable(ros_praktikum src/ros_praktikum.cpp)
 target_link_libraries(ros_praktikum ${catkin_LIBRARIES})
 
-#add_executable(tf_static_broadcaster src/tf_static_broadcaster.cpp)
-#target_link_libraries(tf_static_broadcaster ${catkin_LIBRARIES})
+add_executable(determine_dummy_delta src/determine_dummy_delta.cpp)
+target_link_libraries(determine_dummy_delta ${catkin_LIBRARIES})
 
 
 add_executable(tf_listener src/tf_listener.cpp)
@@ -58,3 +58,4 @@ add_executable(test_planningFrame src/test_planningFrame.cpp)
 target_link_libraries(test_planningFrame ${catkin_LIBRARIES})
 
 add_dependencies(move_to_target ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+

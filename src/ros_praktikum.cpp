@@ -12,7 +12,7 @@
 #include <iiwa_ros.h>
 #include <iiwa_msgs/CartesianQuantity.h>
 
-
+//Author: Laura Bielenberg
 namespace move_to_target{
 
   namespace rvt = rviz_visual_tools;
@@ -128,11 +128,12 @@ namespace move_to_target{
 // All planning according to tool_link_ee !!!
 
   //position only: working! -> this is, what is needed, as "target_frame_1" already holds the needleorientation
+  // needlelength is 0.195 m from ee to tip
   void moveToPositionRelativeTargetFrameOne(){
   
   //moving to point directly above target
   target_pose1.header.frame_id ="target_frame_1";
-  target_pose1.pose.position.x = -0.22;//0.21;
+  target_pose1.pose.position.x = -0.22;//0.21; in order to insert the needle to the tool
   target_pose1.pose.position.y = 0.0;
   target_pose1.pose.position.z = 0.0;
   target_pose1.pose.orientation.w = 1.0;
@@ -150,9 +151,9 @@ namespace move_to_target{
   //robot_state::RobotState start_state(*move_group_.getCurrentState());
   geometry_msgs::PoseStamped currentPose = getPose();
 
-  ROS_INFO_STREAM("start pose before transform is: " << currentPose);
+  ROS_INFO_STREAM("start-pose before transform is: " << currentPose);
 
-  
+  // is this extra transform really needed?
       tf::StampedTransform transform;
       try{
         listener.waitForTransform("target_frame_1", "world", ros::Time(0), ros::Duration(10.0) );
@@ -166,6 +167,7 @@ namespace move_to_target{
   
   geometry_msgs::PoseStamped start_pose;
 
+  //
   listener.transformPose("target_frame_1", currentPose, start_pose);
 
   ROS_INFO_STREAM("start pose after transform is: " << start_pose);
@@ -175,13 +177,13 @@ namespace move_to_target{
   std::vector<geometry_msgs::Pose> waypoints;
   geometry_msgs::Pose target_pose = start_pose.pose;
 
-  tf::Quaternion q_insert =  tf::Quaternion::getIdentity();
-  quaternionTFToMsg(q_insert.normalize(), target_pose.orientation);
-
+ // tf::Quaternion q_insert =  tf::Quaternion::getIdentity();
+ // quaternionTFToMsg(q_insert.normalize(), target_pose.orientation);
+  
  
   target_pose.position.x += x_value; 
-  target_pose.position.x += y_value;
-  target_pose.position.x += z_value;
+  target_pose.position.y += y_value;
+  target_pose.position.z += z_value;
   waypoints.push_back(target_pose);  
   
   ROS_INFO_STREAM("target pose is: " << target_pose);
@@ -338,13 +340,13 @@ int main(int argc, char **argv)
     registered.waitForApproval();
 
     ROS_INFO("nadel zum %i mal einführen", i);
-    registered.moveAlongXAxisCartesian(0.03, 0.0, 0.0);
+    registered.moveAlongXAxisCartesian(0.012, 0.0, 0.0);
     
     ROS_INFO("next' um nadel zum %i mal entnehmen", i);  
     
     registered.waitForApproval();
     
-    registered.moveAlongXAxisCartesian(-0.03, 0.0, 0.0);
+    registered.moveAlongXAxisCartesian(-0.012, 0.0, 0.0);
    }
 
   ros::shutdown();
