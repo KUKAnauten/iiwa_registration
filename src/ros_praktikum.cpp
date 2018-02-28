@@ -10,7 +10,7 @@
 #include <Eigen/Geometry>
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <iiwa_ros.h>
-#include <iiwa_msgs/CartesianQuantity.h>
+#include <iiwa_ros/conversions.h>
 
 //Author: Laura Bielenberg
 namespace move_to_target{
@@ -70,9 +70,9 @@ namespace move_to_target{
       /*The new tf frames Position is defined by the targets positions relative to the dummy coordinatesystem.
         This means, the targets set the origin of the new frames target_frame_xyz(0,0,0)*/  
       
-      insertion_pose_1.position.x = 0.015;//0.005; 
-      insertion_pose_1.position.y = 0.05 - 0.0075;//0.022-0.0075;
-      insertion_pose_1.position.z = 0.045 - 0.0075;//0.024-0.0075;
+      insertion_pose_1.position.x = 0.005;//0.005; 
+      insertion_pose_1.position.y = 0.0185-0.0075;
+      insertion_pose_1.position.z = 0.022-0.0075;
 
       // insertion_pose_2.position.x = 0.015;
       // insertion_pose_2.position.y = 0.05;
@@ -133,7 +133,7 @@ namespace move_to_target{
   
   //moving to point directly above target
   target_pose1.header.frame_id ="target_frame_1";
-  target_pose1.pose.position.x = -0.22;//0.21; in order to insert the needle to the tool
+  target_pose1.pose.position.x = -0.22; // vom 0-Punkt des Targetkoordinatensystems aus 
   target_pose1.pose.position.y = 0.0;
   target_pose1.pose.position.z = 0.0;
   target_pose1.pose.orientation.w = 1.0;
@@ -145,13 +145,16 @@ namespace move_to_target{
   
   } 
   
+  void setVelocity(double v){
+   move_group_.setMaxVelocityScalingFactor(v);
+  }
 
   void moveAlongXAxisCartesian(double x_value, double y_value, double z_value){ //status: working!!
 
   //robot_state::RobotState start_state(*move_group_.getCurrentState());
   geometry_msgs::PoseStamped currentPose = getPose();
 
-  ROS_INFO_STREAM("start-pose before transform is: " << currentPose);
+  ROS_INFO_STREAM("startpose before transform is: " << currentPose);
 
   // is this extra transform really needed?
       tf::StampedTransform transform;
@@ -192,7 +195,7 @@ namespace move_to_target{
 
   move_group_.setGoalPositionTolerance(0.0);
 
- // move_group_.setMaxVelocityScalingFactor(0.5);
+ 
  
   moveit_msgs::RobotTrajectory trajectory;
   move_group_.setPlanningTime(50);
@@ -271,35 +274,20 @@ int main(int argc, char **argv)
   spinner.start();
 
   //values for CartesianImpedanceMode servicecall
-  iiwa_msgs::CartesianQuantity stiffness_reg;
-  stiffness_reg.x = 20.0;
-  stiffness_reg.y = 20.0;
-  stiffness_reg.z = 20.0;
-  stiffness_reg.a = 10.0;
-  stiffness_reg.b = 10.0;
-  stiffness_reg.c = 10.0;
-  iiwa_msgs::CartesianQuantity damping_reg;
-  damping_reg.x = 0.8;
-  damping_reg.y = 0.8;
-  damping_reg.z = 0.8;
-  damping_reg.a = 0.8;
-  damping_reg.b = 0.8;
-  damping_reg.c = 0.8;
-
-  iiwa_msgs::CartesianQuantity stiffness_inj;
-  stiffness_inj.x = 40.0;
-  stiffness_inj.y = 100.0;
-  stiffness_inj.z = 100.0;
-  stiffness_inj.a = 100.0;
-  stiffness_inj.b = 100.0;
-  stiffness_inj.c = 100.0;
-  iiwa_msgs::CartesianQuantity damping_inj;
-  damping_inj.x = 0.9;
-  damping_inj.y = 0.9;
-  damping_inj.z = 0.9;
-  damping_inj.a = 0.9;
-  damping_inj.b = 0.9;
-  damping_inj.c = 0.9;
+  // iiwa_msgs::CartesianQuantity stiffness_reg;
+  // stiffness_reg.x = 20.0;
+  // stiffness_reg.y = 20.0;
+  // stiffness_reg.z = 20.0;
+  // stiffness_reg.a = 10.0;
+  // stiffness_reg.b = 10.0;
+  // stiffness_reg.c = 10.0;
+  // iiwa_msgs::CartesianQuantity damping_reg;
+  // damping_reg.x = 0.8;
+  // damping_reg.y = 0.8;
+  // damping_reg.z = 0.8;
+  // damping_reg.a = 0.8;
+  // damping_reg.b = 0.8;
+  // damping_reg.c = 0.8;
 
   ros::Rate rate(10);
   
@@ -319,7 +307,7 @@ int main(int argc, char **argv)
   ROS_INFO("Click 'next' to cange to CartesianImpedanceMode");
   registered.waitForApproval();
 
-  iiwa_ros_object.getSmartServoService().setCartesianImpedanceMode(stiffness_reg, damping_reg, 0.0, 0.7);
+  iiwa_ros_object.getSmartServoService().setCartesianImpedanceMode(iiwa_ros::cartesianQuantityFromDouble(20,20,20,5,5,5), iiwa_ros::cartesianQuantityFromDouble(0.8));
   ROS_INFO("Changed Mode");
     
   ROS_INFO("Click 'next to change back to PositionControlMode '");
@@ -327,28 +315,32 @@ int main(int argc, char **argv)
 
   iiwa_ros_object.getSmartServoService().setPositionControlMode();
 
-  ROS_INFO("Move above targetframe?");
-  registered.waitForApproval();
 
-  ROS_INFO("Moving to new pose above targetframe");
+  ROS_INFO("Planning to new pose above targetframe. Click 'next' to move.");
   registered.moveToPositionRelativeTargetFrameOne(); 
 
-  
-  for(i=1; i < 100; i++){
+  for (int j = 1; j < 10; ++j)
+  {
+    double vel = 0.1*j;
 
-    ROS_INFO("Weiter mit Nadeleinstichschleife?");
-    registered.waitForApproval();
+    registered.setVelocity(vel);
 
-    ROS_INFO("nadel zum %i mal einführen", i);
-    registered.moveAlongXAxisCartesian(0.012, 0.0, 0.0);
-    
-    ROS_INFO("next' um nadel zum %i mal entnehmen", i);  
-    
-    registered.waitForApproval();
-    
-    registered.moveAlongXAxisCartesian(-0.012, 0.0, 0.0);
-   }
+    for(i=1; i < 10; i++){
 
+      ROS_INFO("Weiter mit Nadeleinstichschleife?");
+      registered.waitForApproval();
+
+      ROS_INFO("nadel zum %i mal einführen", i);
+      registered.moveAlongXAxisCartesian(0.034, 0.0, 0.0);
+      
+      ROS_INFO("next' um nadel zum %i mal entnehmen", i);  
+      
+      registered.waitForApproval();
+      
+      registered.moveAlongXAxisCartesian(-0.034, 0.0, 0.0);
+     }
+
+  }
   ros::shutdown();
-  return 0;
+    return 0;
 }
