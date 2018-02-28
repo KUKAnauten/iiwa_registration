@@ -201,8 +201,8 @@ namespace move_to_target{
   move_group_.setPlanningTime(50);
 
   double fraction = move_group_.computeCartesianPath(waypoints,
-                                               0.01,  // eef_step
-                                               0.0,   
+                                               0.001,  // eef_step
+                                               100.0,   // jump_threshold (default= 0.0 -> disabled)
                                                trajectory, false);
 
   // The trajectory needs to be modified so it will include velocities as well. This is done here.
@@ -273,22 +273,6 @@ int main(int argc, char **argv)
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
-  //values for CartesianImpedanceMode servicecall
-  // iiwa_msgs::CartesianQuantity stiffness_reg;
-  // stiffness_reg.x = 20.0;
-  // stiffness_reg.y = 20.0;
-  // stiffness_reg.z = 20.0;
-  // stiffness_reg.a = 10.0;
-  // stiffness_reg.b = 10.0;
-  // stiffness_reg.c = 10.0;
-  // iiwa_msgs::CartesianQuantity damping_reg;
-  // damping_reg.x = 0.8;
-  // damping_reg.y = 0.8;
-  // damping_reg.z = 0.8;
-  // damping_reg.a = 0.8;
-  // damping_reg.b = 0.8;
-  // damping_reg.c = 0.8;
-
   ros::Rate rate(10);
   
   int i = 0;
@@ -319,12 +303,6 @@ int main(int argc, char **argv)
   ROS_INFO("Planning to new pose above targetframe. Click 'next' to move.");
   registered.moveToPositionRelativeTargetFrameOne(); 
 
-  for (int j = 1; j < 10; ++j)
-  {
-    double vel = 0.1*j;
-
-    registered.setVelocity(vel);
-
     for(i=1; i < 10; i++){
 
       ROS_INFO("Weiter mit Nadeleinstichschleife?");
@@ -340,7 +318,6 @@ int main(int argc, char **argv)
       registered.moveAlongXAxisCartesian(-0.034, 0.0, 0.0);
      }
 
-  }
   ros::shutdown();
     return 0;
 }
